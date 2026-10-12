@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {"Authorization": "Bearer ${input:github-token}"}
+    },
+    "jira": {
+      "type": "http",
+      "url": "http://mcp.tools.example.com/jira",
+      "headers": {"Authorization": "Bearer ${input:jira-token}"}
+    }
+  }
+}

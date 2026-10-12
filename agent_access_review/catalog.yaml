@@ -1,0 +1,89 @@
+# Capability profiles for well-known MCP servers. An MCP config only says *which*
+# server runs, not what it can do, so this catalog is how a server name becomes an
+# access grant. Anything not listed here is flagged as unclassified (AAR-12) rather
+# than silently assumed safe. Add your organization's internal servers here.
+#
+#   actions:              read | write | delete | send | execute | admin
+#   data_classification:  public | internal | confidential | restricted
+#   untrusted_input:      the tool returns content an outsider can author (prompt-injection source)
+#   egress:               the tool can move data outside the organization
+#   resource_from:        how to name the resource: paths (filesystem args) | dsn (connection string)
+
+servers:
+  "@modelcontextprotocol/server-filesystem":
+    tool: filesystem
+    actions: [read, write, delete]
+    data_classification: confidential
+    resource_from: paths
+
+  "@modelcontextprotocol/server-github":
+    tool: github
+    actions: [read, write]
+    data_classification: confidential
+    untrusted_input: true
+    egress: true
+
+  "ghcr.io/github/github-mcp-server":
+    tool: github
+    actions: [read, write]
+    data_classification: confidential
+    untrusted_input: true
+    egress: true
+
+  "@modelcontextprotocol/server-postgres":
+    tool: postgres
+    actions: [read]
+    data_classification: restricted
+    resource_from: dsn
+
+  "@modelcontextprotocol/server-slack":
+    tool: slack
+    actions: [read, send]
+    data_classification: confidential
+    untrusted_input: true
+    egress: true
+
+  "mcp-server-fetch":
+    tool: fetch
+    actions: [read]
+    data_classification: public
+    untrusted_input: true
+    egress: true            # a GET to an attacker URL can carry data in the query string
+
+  "@modelcontextprotocol/server-puppeteer":
+    tool: browser
+    actions: [read, send]
+    data_classification: public
+    untrusted_input: true
+    egress: true
+
+  "@playwright/mcp":
+    tool: browser
+    actions: [read, send]
+    data_classification: public
+    untrusted_input: true
+    egress: true
+
+  "@wonderwhy-er/desktop-commander":
+    tool: shell
+    actions: [read, write, delete, execute]
+    data_classification: confidential
+
+  "mcp-shell-server":
+    tool: shell
+    actions: [execute]
+    data_classification: confidential
+
+  "@modelcontextprotocol/server-memory":
+    tool: memory
+    actions: [read, write]
+    data_classification: internal
+
+# Remote (HTTP/SSE) MCP servers, matched on hostname.
+remote_hosts:
+  "api.githubcopilot.com":
+    tool: github
+    actions: [read, write]
+    data_classification: confidential
+    untrusted_input: true
+    egress: true

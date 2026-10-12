@@ -1,0 +1,36 @@
+name: Tests
+
+on:
+  push: {branches: [main]}
+  pull_request: {}
+  workflow_dispatch: {}
+
+permissions: {contents: read}
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest -q
+
+      # Review the example agents and publish the packet on the run's summary page.
+      - name: Sample access review
+        run: |
+          python -m agent_access_review scan examples --out review --as-of 2026-10-12
+          cat review/access-review.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sample-access-review
+          path: review/
