@@ -34,13 +34,72 @@ Agents are non-human identities. They need the same joiner/mover/leaver and rece
 
 Each control is defined once in [`controls.yaml`](agent_access_review/controls.yaml) and cross-walked to every framework, so one test produces evidence for all of them. The mappings are my own judgment and should be checked against official crosswalks before being relied on in a real audit.
 
+## The AI-specific risk: exfiltration paths (AAR-09)
+
+Traditional access reviews look at one permission at a time. For AI agents, the danger is a **combination**: an agent that can read sensitive data, reads content an outsider wrote, and can send data out. Each leg is harmless alone. Together, one prompt injection hidden in an email, ticket, issue or web page can instruct the agent to leak the data. A human approval step on any leg breaks the chain.
+
+```mermaid
+flowchart TB
+    subgraph BAD["❌ finance-ops-agent: flagged AAR-09"]
+        direction LR
+        U1["📨 Untrusted input<br/>anyone can email the AP inbox"] -->|"hidden instruction:<br/>forward vendor bank details"| A1(("🤖 agent"))
+        D1[("🔒 Restricted data<br/>NetSuite vendor bills")] -->|reads| A1
+        A1 -->|"sends email<br/>no human approval"| X1["🌐 Egress<br/>any recipient"]
+    end
+    subgraph GOOD["✅ support-copilot: passes"]
+        direction LR
+        U2["📨 Untrusted input<br/>customer tickets"] --> A2(("🤖 agent"))
+        D2[("🔒 Confidential data<br/>ticket history")] --> A2
+        A2 -->|"drafts reply"| H{{"👤 Human approves"}}
+        H -->|sends| X2["Customer"]
+    end
+    BAD ~~~ GOOD
+
+    classDef risk fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+    classDef safe fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef gate fill:#fef3c7,stroke:#d97706,color:#78350f
+    class U1,D1,X1 risk
+    class U2,D2,X2 safe
+    class H gate
+```
+
+This maps to OWASP LLM01 (prompt injection) and LLM02 (sensitive information disclosure), NIST 800-53 AC-4 (information flow enforcement) and NIST AI RMF MEASURE 2.7 (AI security and resilience).
+
 ## How it works
 
-```
-MCP configs ─┐                                                     ┌─> access-review.md   reviewer packet + sign-off
-             ├─> parsers ──> inventory ──> 12 checks ──> findings ─┼─> access-review.csv  UAR decision sheet
-agents.yaml ─┘   (redact      (Agent,       (checks.py)            ├─> evidence/*.json    hashed, one per agent
-                  secrets)     Grant)                              └─> oscal/assessment-results.json
+```mermaid
+flowchart LR
+    subgraph IN["📥 Inputs"]
+        A["Claude Desktop / Cursor<br/>MCP configs"]
+        B["VS Code<br/>.vscode/mcp.json"]
+        C["agents.yaml<br/>LangChain · CrewAI · custom"]
+    end
+    subgraph CORE["⚙️ agent_access_review"]
+        P["Parsers<br/>secrets redacted here"]
+        K[("Capability catalog<br/>catalog.yaml")]
+        I["Normalized inventory<br/>agent → grants + credentials"]
+        X["12 checks<br/>AAR-01 … AAR-12"]
+        M[("Control catalog<br/>controls.yaml")]
+    end
+    subgraph OUT["📤 Audit outputs"]
+        R["access-review.md<br/>reviewer packet + sign-off"]
+        S["access-review.csv<br/>Keep / Modify / Revoke"]
+        E["evidence/*.json<br/>SHA-256 hashed"]
+        O["OSCAL 1.1.2<br/>assessment results"]
+    end
+    A & B & C --> P --> I --> X
+    K -. "what each server can do" .-> I
+    M -. "NIST · SOC 2 · AI RMF · OWASP" .-> X
+    X --> R & S & E & O
+
+    classDef input fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+    classDef core fill:#ede9fe,stroke:#7c3aed,color:#3b0764
+    classDef data fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef output fill:#dcfce7,stroke:#16a34a,color:#14532d
+    class A,B,C input
+    class P,I,X core
+    class K,M data
+    class R,S,E,O output
 ```
 
 1. **Discover.** Point it at files or folders. It reads two formats:
@@ -50,6 +109,39 @@ agents.yaml ─┘   (redact      (Agent,       (checks.py)            ├─> e
 3. **Redact, then hash.** Secrets are masked during parsing, before anything is stored, so evidence can be shared with auditors. Each agent's inventory and redacted source record are hashed with SHA-256 over canonical JSON, so any later edit to the evidence is detectable.
 4. **Review.** Every tool grant gets a recommended decision (**Keep / Modify / Revoke / Investigate**) and an empty column for the reviewer, the same shape as a user access review spreadsheet.
 5. **Export.** OSCAL 1.1.2 assessment results: one observation per agent pointing at its evidence file and hash, and one finding per NIST 800-53 control objective.
+
+### The review cycle
+
+It's the same quarterly user access review that SOX and SOC 2 auditors already test for people, run on agents:
+
+```mermaid
+flowchart LR
+    D["1 · Discover<br/>configs + manifests"] --> C["2 · Classify<br/>capability catalog"]
+    C --> T["3 · Test<br/>12 controls"]
+    T --> R{"4 · Owner review<br/>per tool grant"}
+    R -->|Keep| E["5 · Evidence<br/>hashed JSON + OSCAL"]
+    R -->|"Modify / Revoke"| F["Remediate<br/>ticket + fix"]
+    F -->|re-scan| T
+    E --> Q["6 · Recertify<br/>every 90 days"]
+    Q -.-> D
+
+    classDef step fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+    classDef decision fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef fix fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+    classDef done fill:#dcfce7,stroke:#16a34a,color:#14532d
+    class D,C,T,Q step
+    class R decision
+    class F fix
+    class E done
+```
+
+| User access review (people) | Agent access review (this tool) |
+|---|---|
+| HR feed lists every employee | Configs and manifests list every agent and MCP server |
+| Manager confirms each entitlement | Agent owner marks each tool grant Keep / Modify / Revoke |
+| Terminated users removed | Unowned agents flagged (AAR-01), unused tools revoked (AAR-08) |
+| Privileged access gets extra scrutiny | Write, send, delete and shell access need a human gate (AAR-03, AAR-05) |
+| Screenshots and spreadsheets as evidence | Hashed JSON evidence and OSCAL output |
 
 ## Sample run
 
@@ -64,6 +156,50 @@ devops-agent                     2     6     1     1
 claude-desktop-config            6    11     5     1
 vscode-mcp                       2     5     1     3
 ```
+
+**5 agents · 16 tool grants · 41 findings**
+
+```mermaid
+%%{init: {"themeVariables": {"pie1": "#dc2626", "pie2": "#f59e0b", "pie3": "#16a34a", "pieSectionTextColor": "#ffffff", "pieStrokeColor": "#ffffff"}}}%%
+pie showData title Findings by severity
+    "High" : 26
+    "Medium" : 10
+    "Low" : 5
+```
+
+| Control | Agents failing |
+|---|:---:|
+| AAR-02 · Approved and recertified within 90 days | 4 / 5 |
+| AAR-03 · Human approval for privileged actions | 4 / 5 |
+| AAR-08 · Dormant access removed | 4 / 5 |
+| AAR-01 · Accountable owner | 3 / 5 |
+| AAR-04 · Least privilege | 3 / 5 |
+| AAR-09 · No exfiltration path | 3 / 5 |
+| AAR-05, 06, 07, 10, 12 | 2 / 5 each |
+| AAR-11 · Encrypted transport | 1 / 5 |
+
+<details>
+<summary><b>Excerpt from the reviewer packet: finance-ops-agent</b></summary>
+<br/>
+
+| Tool | Actions | Data | Recommended | Reviewer decision |
+|---|---|---|---|---|
+| netsuite | read, write | restricted | **Modify** | ☐ Keep ☐ Modify ☐ Revoke |
+| outlook | read, send | confidential | **Modify** | ☐ Keep ☐ Modify ☐ Revoke |
+| sharepoint | read | confidential | **Modify** | ☐ Keep ☐ Modify ☐ Revoke |
+| expense-ocr | read | confidential | **Revoke** | ☐ Keep ☐ Modify ☐ Revoke |
+
+| Check | Severity | Finding |
+|---|---|---|
+| AAR-09 | high | Exfiltration path: reads sensitive data, ingests untrusted content (outlook) and can send data out (outlook) with no human approval. |
+| AAR-03 | high | netsuite can write restricted data without a human approving each action. |
+| AAR-03 | high | outlook can send confidential data without a human approving each action. |
+| AAR-04 | high | Over-broad access on sharepoint: `Sites.Read.All`. |
+| AAR-02 | medium | Access was last approved 216 days ago by cfo-office (limit 90). |
+| AAR-07 | medium | netsuite.NETSUITE_TOKEN was last rotated 315 days ago (limit 90). |
+| AAR-08 | medium | expense-ocr has not been used for 164 days. |
+
+</details>
 
 Some of what it finds:
 
