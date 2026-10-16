@@ -1,6 +1,8 @@
 # agent-access-review
 
 [![Tests](https://github.com/Mihirajmera/agent-access-review/actions/workflows/tests.yml/badge.svg)](https://github.com/Mihirajmera/agent-access-review/actions/workflows/tests.yml)
+[![CodeQL](https://github.com/Mihirajmera/agent-access-review/actions/workflows/codeql.yml/badge.svg)](https://github.com/Mihirajmera/agent-access-review/actions/workflows/codeql.yml)
+[![M8ven Score](https://m8ven.ai/badge/mcp/mihirajmera-agent-access-review-153tex?v=85668ed5e44ea66da691a76b634c576b)](https://m8ven.ai/mcp/mihirajmera-agent-access-review-153tex?s=readme)
 
 **User access reviews for AI agents.** It finds every agent and MCP server an organization runs, works out what each one can read, write, execute and send, tests that access against 12 controls, and produces the packet an auditor expects: a reviewer sign-off sheet, hashed evidence, and OSCAL assessment results mapped to NIST 800-53, SOC 2, NIST AI RMF and the OWASP Top 10 for LLM Applications.
 
@@ -213,6 +215,15 @@ Every CI run publishes the full packet on the [Actions summary page](https://git
 
 Requirements: Python 3.11+. No cloud account or API keys needed.
 
+Install the CLI straight from a release:
+
+```bash
+pip install "git+https://github.com/Mihirajmera/agent-access-review@v0.1.0"
+agent-access-review scan ~/Library/Application\ Support/Claude/claude_desktop_config.json
+```
+
+Or work from source (dependencies are pinned exactly in `requirements.txt`):
+
 ```bash
 git clone https://github.com/Mihirajmera/agent-access-review.git
 cd agent-access-review
@@ -220,7 +231,6 @@ python -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\a
 pip install -r requirements.txt
 
 python -m agent_access_review scan examples           # writes review/
-python -m agent_access_review scan ~/Library/Application\ Support/Claude/claude_desktop_config.json
 pytest -q
 ```
 
@@ -231,9 +241,11 @@ Options: `--out DIR` (default `review/`), `--as-of YYYY-MM-DD` (date used for re
 Keep `agents.yaml` in the repo that deploys your agents, and block merges that introduce high-risk access:
 
 ```yaml
-- run: pip install pyyaml && git clone --depth 1 https://github.com/Mihirajmera/agent-access-review /tmp/aar
-- run: PYTHONPATH=/tmp/aar python -m agent_access_review scan agents.yaml --fail-on high
+- run: pip install "git+https://github.com/Mihirajmera/agent-access-review@v0.1.0"
+- run: agent-access-review scan agents.yaml --fail-on high
 ```
+
+Pin to a release tag (or a commit SHA), not `main`, so a new version can't change your gate without review. That's control AAR-10 applied to this tool itself.
 
 ## Design decisions
 

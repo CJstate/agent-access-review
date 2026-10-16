@@ -11,9 +11,11 @@ jobs:
   pytest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.11'
           cache: pip
@@ -24,13 +26,15 @@ jobs:
       - name: Run tests
         run: pytest -q
 
+      # Install the package itself so the console script and bundled YAML catalogs are tested too.
       # Review the example agents and publish the packet on the run's summary page.
       - name: Sample access review
         run: |
-          python -m agent_access_review scan examples --out review --as-of 2026-10-12
+          pip install .
+          agent-access-review scan examples --out review --as-of 2026-10-12
           cat review/access-review.md >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: sample-access-review
           path: review/

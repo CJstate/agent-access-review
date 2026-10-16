@@ -1,2 +1,11 @@
-pyyaml>=6.0
-pytest>=8.0
+# Exact pins for reproducible CI and development installs (Dependabot keeps them current).
+# The package itself declares a compatible range in pyproject.toml.
+pyyaml==6.0.3
+
+# tests
+pytest==9.1.1
+iniconfig==2.3.1
+packaging==26.3
+pluggy==1.6.0
+pygments==2.21.0
+colorama==0.4.6; sys_platform == "win32"
