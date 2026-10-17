@@ -1,0 +1,39 @@
+name: Catalog entry
+description: Add an MCP server (or correct one) in the capability catalog
+labels: [catalog]
+body:
+  - type: input
+    id: package
+    attributes:
+      label: Package or image name
+      description: Exactly as it appears in MCP configs, e.g. @modelcontextprotocol/server-github
+    validations: {required: true}
+  - type: input
+    id: docs
+    attributes:
+      label: Link to the server's documentation or source
+    validations: {required: true}
+  - type: checkboxes
+    id: actions
+    attributes:
+      label: What can it do?
+      options:
+        - label: read
+        - label: write
+        - label: delete
+        - label: send (messages, email, HTTP requests)
+        - label: execute (shell or code)
+        - label: admin
+  - type: dropdown
+    id: data
+    attributes:
+      label: Most sensitive data it typically reaches
+      options: [public, internal, confidential, restricted]
+    validations: {required: true}
+  - type: checkboxes
+    id: flags
+    attributes:
+      label: Exposure
+      options:
+        - label: Returns content an outsider can write (web pages, email, tickets, issues)
+        - label: Can send data outside the organization

@@ -1,0 +1,243 @@
+{
+  "agent_id": "vscode-mcp",
+  "collected": "2026-10-12T00:00:00+00:00",
+  "hash_scope": "sha256 of canonical JSON (sorted keys, no spaces) of {inventory, source_record}",
+  "inventory": {
+    "approved_by": null,
+    "approved_on": null,
+    "credentials": [
+      {
+        "hardcoded": false,
+        "last_rotated": null,
+        "name": "github.header.Authorization"
+      },
+      {
+        "hardcoded": false,
+        "last_rotated": null,
+        "name": "jira.header.Authorization"
+      }
+    ],
+    "grants": [
+      {
+        "actions": [
+          "read",
+          "write"
+        ],
+        "category": "github",
+        "data_classification": "confidential",
+        "egress": true,
+        "endpoint": "https://api.githubcopilot.com/mcp/",
+        "known": true,
+        "last_used": null,
+        "package": null,
+        "pinned": null,
+        "requires_approval": false,
+        "resource": "https://api.githubcopilot.com/mcp/",
+        "sandboxed": false,
+        "scopes": [],
+        "tool": "github",
+        "untrusted_input": true
+      },
+      {
+        "actions": [
+          "unknown"
+        ],
+        "category": null,
+        "data_classification": "internal",
+        "egress": false,
+        "endpoint": "http://mcp.tools.example.com/jira",
+        "known": false,
+        "last_used": null,
+        "package": null,
+        "pinned": null,
+        "requires_approval": false,
+        "resource": "http://mcp.tools.example.com/jira",
+        "sandboxed": false,
+        "scopes": [],
+        "tool": "jira",
+        "untrusted_input": false
+      }
+    ],
+    "id": "vscode-mcp",
+    "name": "MCP host (vscode-mcp.json)",
+    "owner": null,
+    "source": "examples/vscode-mcp.json",
+    "source_type": "mcp-config"
+  },
+  "results": [
+    {
+      "check_id": "AAR-01",
+      "findings": [
+        {
+          "agent_id": "vscode-mcp",
+          "check_id": "AAR-01",
+          "message": "No accountable human owner is recorded for this agent.",
+          "recommendation": "Assign an owner who answers for what the agent does, or decommission it.",
+          "severity": "high",
+          "tool": null
+        }
+      ],
+      "status": "FAIL",
+      "title": "Every agent has an accountable human owner"
+    },
+    {
+      "check_id": "AAR-02",
+      "findings": [
+        {
+          "agent_id": "vscode-mcp",
+          "check_id": "AAR-02",
+          "message": "Agent access has no recorded approval.",
+          "recommendation": "Route the agent through access approval before its next use.",
+          "severity": "high",
+          "tool": null
+        }
+      ],
+      "status": "FAIL",
+      "title": "Agent access is approved and recertified within 90 days"
+    },
+    {
+      "check_id": "AAR-03",
+      "findings": [
+        {
+          "agent_id": "vscode-mcp",
+          "check_id": "AAR-03",
+          "message": "github can write confidential data without a human approving each action.",
+          "recommendation": "Require human confirmation for these actions, or reduce the tool to read-only.",
+          "severity": "high",
+          "tool": "github"
+        }
+      ],
+      "status": "FAIL",
+      "title": "Privileged agent actions require human approval"
+    },
+    {
+      "check_id": "AAR-04",
+      "findings": [],
+      "status": "PASS",
+      "title": "Tool scopes follow least privilege"
+    },
+    {
+      "check_id": "AAR-05",
+      "findings": [],
+      "status": "PASS",
+      "title": "Code and shell execution is sandboxed"
+    },
+    {
+      "check_id": "AAR-06",
+      "findings": [],
+      "status": "PASS",
+      "title": "No credentials are hardcoded in agent configuration"
+    },
+    {
+      "check_id": "AAR-07",
+      "findings": [
+        {
+          "agent_id": "vscode-mcp",
+          "check_id": "AAR-07",
+          "message": "No rotation date is recorded for github.header.Authorization.",
+          "recommendation": "Record when the credential was issued so rotation can be evidenced.",
+          "severity": "low",
+          "tool": "github"
+        },
+        {
+          "agent_id": "vscode-mcp",
+          "check_id": "AAR-07",
+          "message": "No rotation date is recorded for jira.header.Authorization.",
+          "recommendation": "Record when the credential was issued so rotation can be evidenced.",
+          "severity": "low",
+          "tool": "jira"
+        }
+      ],
+      "status": "FAIL",
+      "title": "Agent credentials are rotated within 90 days"
+    },
+    {
+      "check_id": "AAR-08",
+      "findings": [
+        {
+          "agent_id": "vscode-mcp",
+          "check_id": "AAR-08",
+          "message": "No tool usage is logged, so dormant access cannot be identified.",
+          "recommendation": "Log tool calls per agent so unused access can be found and removed.",
+          "severity": "low",
+          "tool": null
+        }
+      ],
+      "status": "FAIL",
+      "title": "Dormant agent access is removed after 90 days"
+    },
+    {
+      "check_id": "AAR-09",
+      "findings": [
+        {
+          "agent_id": "vscode-mcp",
+          "check_id": "AAR-09",
+          "message": "Exfiltration path: reads sensitive data (github), ingests untrusted content (github) and can send data out (github) with no human approval. A prompt injection in the untrusted content could leak the data.",
+          "recommendation": "Break the chain: split the agent, remove one leg, or require approval on every egress action.",
+          "severity": "high",
+          "tool": null
+        }
+      ],
+      "status": "FAIL",
+      "title": "No unmitigated data exfiltration path"
+    },
+    {
+      "check_id": "AAR-10",
+      "findings": [],
+      "status": "PASS",
+      "title": "Tool packages are pinned to a version"
+    },
+    {
+      "check_id": "AAR-11",
+      "findings": [
+        {
+          "agent_id": "vscode-mcp",
+          "check_id": "AAR-11",
+          "message": "jira connects to http://mcp.tools.example.com/jira over unencrypted HTTP.",
+          "recommendation": "Use HTTPS so credentials and tool traffic are encrypted in transit.",
+          "severity": "high",
+          "tool": "jira"
+        }
+      ],
+      "status": "FAIL",
+      "title": "Remote tools use encrypted transport"
+    },
+    {
+      "check_id": "AAR-12",
+      "findings": [
+        {
+          "agent_id": "vscode-mcp",
+          "check_id": "AAR-12",
+          "message": "jira (http://mcp.tools.example.com/jira) is not in the capability catalog, so its access cannot be assessed.",
+          "recommendation": "Document what the tool can read, write and send, and add it to catalog.yaml.",
+          "severity": "medium",
+          "tool": "jira"
+        }
+      ],
+      "status": "FAIL",
+      "title": "Every tool's capabilities are inventoried"
+    }
+  ],
+  "review_as_of": "2026-10-12",
+  "sha256": "7be1e8fe98ff49055d4e3bd463c8b57a78b940cad2c3bd842602e0970a2adcdf",
+  "source": "examples/vscode-mcp.json",
+  "source_record": {
+    "servers": {
+      "github": {
+        "headers": {
+          "Authorization": "Bearer ${input:github-token}"
+        },
+        "type": "http",
+        "url": "https://api.githubcopilot.com/mcp/"
+      },
+      "jira": {
+        "headers": {
+          "Authorization": "Bearer ${input:jira-token}"
+        },
+        "type": "http",
+        "url": "http://mcp.tools.example.com/jira"
+      }
+    }
+  },
+  "source_type": "mcp-config"
+}

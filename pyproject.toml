@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-access-review"
-version = "0.1.0"
+version = "0.2.0"
 description = "User access reviews for AI agents and MCP servers, with audit evidence and OSCAL output"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -30,4 +30,4 @@ agent-access-review = "agent_access_review.__main__:main"
 packages = ["agent_access_review"]
 
 [tool.setuptools.package-data]
-agent_access_review = ["*.yaml"]
+agent_access_review = ["*.yaml", "examples/*"]

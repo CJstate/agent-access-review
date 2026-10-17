@@ -1,0 +1,252 @@
+{
+  "agent_id": "devops-agent",
+  "collected": "2026-10-12T00:00:00+00:00",
+  "hash_scope": "sha256 of canonical JSON (sorted keys, no spaces) of {inventory, source_record}",
+  "inventory": {
+    "approved_by": null,
+    "approved_on": null,
+    "credentials": [
+      {
+        "hardcoded": true,
+        "last_rotated": null,
+        "name": "github.GITHUB_TOKEN"
+      }
+    ],
+    "grants": [
+      {
+        "actions": [
+          "execute"
+        ],
+        "category": "shell",
+        "data_classification": "confidential",
+        "egress": false,
+        "endpoint": null,
+        "known": true,
+        "last_used": null,
+        "package": null,
+        "pinned": null,
+        "requires_approval": false,
+        "resource": "build-runner-07",
+        "sandboxed": false,
+        "scopes": [],
+        "tool": "shell",
+        "untrusted_input": false
+      },
+      {
+        "actions": [
+          "read",
+          "write"
+        ],
+        "category": "source-control",
+        "data_classification": "confidential",
+        "egress": false,
+        "endpoint": null,
+        "known": true,
+        "last_used": null,
+        "package": "@acme/github-tools",
+        "pinned": false,
+        "requires_approval": false,
+        "resource": "github:acme-corp",
+        "sandboxed": false,
+        "scopes": [
+          "repo"
+        ],
+        "tool": "github",
+        "untrusted_input": false
+      }
+    ],
+    "id": "devops-agent",
+    "name": "DevOps Auto-Remediation Agent",
+    "owner": null,
+    "source": "examples/agents.yaml",
+    "source_type": "agent-manifest"
+  },
+  "results": [
+    {
+      "check_id": "AAR-01",
+      "findings": [
+        {
+          "agent_id": "devops-agent",
+          "check_id": "AAR-01",
+          "message": "No accountable human owner is recorded for this agent.",
+          "recommendation": "Assign an owner who answers for what the agent does, or decommission it.",
+          "severity": "high",
+          "tool": null
+        }
+      ],
+      "status": "FAIL",
+      "title": "Every agent has an accountable human owner"
+    },
+    {
+      "check_id": "AAR-02",
+      "findings": [
+        {
+          "agent_id": "devops-agent",
+          "check_id": "AAR-02",
+          "message": "Agent access has no recorded approval.",
+          "recommendation": "Route the agent through access approval before its next use.",
+          "severity": "high",
+          "tool": null
+        }
+      ],
+      "status": "FAIL",
+      "title": "Agent access is approved and recertified within 90 days"
+    },
+    {
+      "check_id": "AAR-03",
+      "findings": [
+        {
+          "agent_id": "devops-agent",
+          "check_id": "AAR-03",
+          "message": "github can write confidential data without a human approving each action.",
+          "recommendation": "Require human confirmation for these actions, or reduce the tool to read-only.",
+          "severity": "high",
+          "tool": "github"
+        }
+      ],
+      "status": "FAIL",
+      "title": "Privileged agent actions require human approval"
+    },
+    {
+      "check_id": "AAR-04",
+      "findings": [
+        {
+          "agent_id": "devops-agent",
+          "check_id": "AAR-04",
+          "message": "Over-broad access on github: repo.",
+          "recommendation": "Narrow the grant to the specific directories, repositories or scopes the agent needs.",
+          "severity": "high",
+          "tool": "github"
+        }
+      ],
+      "status": "FAIL",
+      "title": "Tool scopes follow least privilege"
+    },
+    {
+      "check_id": "AAR-05",
+      "findings": [
+        {
+          "agent_id": "devops-agent",
+          "check_id": "AAR-05",
+          "message": "shell can execute arbitrary commands on the host without a sandbox.",
+          "recommendation": "Run the tool in a container or VM with no host credentials mounted, or remove it.",
+          "severity": "high",
+          "tool": "shell"
+        }
+      ],
+      "status": "FAIL",
+      "title": "Code and shell execution is sandboxed"
+    },
+    {
+      "check_id": "AAR-06",
+      "findings": [
+        {
+          "agent_id": "devops-agent",
+          "check_id": "AAR-06",
+          "message": "Credential github.GITHUB_TOKEN is stored in plain text in the agent configuration.",
+          "recommendation": "Revoke and reissue it, then load it from a secret manager or environment reference.",
+          "severity": "high",
+          "tool": "github"
+        }
+      ],
+      "status": "FAIL",
+      "title": "No credentials are hardcoded in agent configuration"
+    },
+    {
+      "check_id": "AAR-07",
+      "findings": [],
+      "status": "PASS",
+      "title": "Agent credentials are rotated within 90 days"
+    },
+    {
+      "check_id": "AAR-08",
+      "findings": [
+        {
+          "agent_id": "devops-agent",
+          "check_id": "AAR-08",
+          "message": "No tool usage is logged, so dormant access cannot be identified.",
+          "recommendation": "Log tool calls per agent so unused access can be found and removed.",
+          "severity": "low",
+          "tool": null
+        }
+      ],
+      "status": "FAIL",
+      "title": "Dormant agent access is removed after 90 days"
+    },
+    {
+      "check_id": "AAR-09",
+      "findings": [],
+      "status": "PASS",
+      "title": "No unmitigated data exfiltration path"
+    },
+    {
+      "check_id": "AAR-10",
+      "findings": [
+        {
+          "agent_id": "devops-agent",
+          "check_id": "AAR-10",
+          "message": "github runs @acme/github-tools without a pinned version, so a new upstream release runs automatically.",
+          "recommendation": "Pin an exact version (npm/PyPI) or image digest and update it through change control.",
+          "severity": "medium",
+          "tool": "github"
+        }
+      ],
+      "status": "FAIL",
+      "title": "Tool packages are pinned to a version"
+    },
+    {
+      "check_id": "AAR-11",
+      "findings": [],
+      "status": "PASS",
+      "title": "Remote tools use encrypted transport"
+    },
+    {
+      "check_id": "AAR-12",
+      "findings": [],
+      "status": "PASS",
+      "title": "Every tool's capabilities are inventoried"
+    }
+  ],
+  "review_as_of": "2026-10-12",
+  "sha256": "ea02c9577a756cc298578662deaa208d3e355cc13f89d9b3a5e9429359120e17",
+  "source": "examples/agents.yaml",
+  "source_record": {
+    "credentials": [
+      {
+        "name": "GITHUB_TOKEN",
+        "source": "hardcoded",
+        "tool": "github"
+      }
+    ],
+    "framework": "custom",
+    "id": "devops-agent",
+    "name": "DevOps Auto-Remediation Agent",
+    "tools": [
+      {
+        "actions": [
+          "execute"
+        ],
+        "data_classification": "confidential",
+        "name": "shell",
+        "resource": "build-runner-07",
+        "type": "shell"
+      },
+      {
+        "actions": [
+          "read",
+          "write"
+        ],
+        "data_classification": "confidential",
+        "name": "github",
+        "package": "@acme/github-tools",
+        "pinned": false,
+        "resource": "github:acme-corp",
+        "scopes": [
+          "repo"
+        ],
+        "type": "source-control"
+      }
+    ]
+  },
+  "source_type": "agent-manifest"
+}

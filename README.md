@@ -6,6 +6,48 @@
 
 **User access reviews for AI agents.** It finds every agent and MCP server an organization runs, works out what each one can read, write, execute and send, tests that access against 12 controls, and produces the packet an auditor expects: a reviewer sign-off sheet, hashed evidence, and OSCAL assessment results mapped to NIST 800-53, SOC 2, NIST AI RMF and the OWASP Top 10 for LLM Applications.
 
+> **In one sentence:** the quarterly "who has access to what?" review that companies already run for employees, applied to AI agents.
+
+## Quick start (2 minutes)
+
+You need Python 3.11+. No cloud account, API keys or network access.
+
+```bash
+pip install "git+https://github.com/Mihirajmera/agent-access-review@v0.2.0"
+agent-access-review demo
+```
+
+`demo` reviews five example agents and writes the packet to `review-demo/`. Open `review-demo/access-review.md`, or just **[read the sample report here](sample-output/access-review.md)** without installing anything.
+
+Then review your own setup:
+
+| Tool | Where its MCP config lives | Command |
+|---|---|---|
+| Claude Desktop (macOS) | `~/Library/Application Support/Claude/claude_desktop_config.json` | `agent-access-review scan ~/Library/Application\ Support/Claude/claude_desktop_config.json` |
+| Claude Desktop (Windows) | `%APPDATA%\Claude\claude_desktop_config.json` | `agent-access-review scan "%APPDATA%\Claude\claude_desktop_config.json"` |
+| Cursor | `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (project) | `agent-access-review scan ~/.cursor/mcp.json` |
+| VS Code | `.vscode/mcp.json` in a project | `agent-access-review scan .vscode/mcp.json` |
+| Your own agents | an [`agents.yaml`](agent_access_review/examples/agents.yaml) you maintain | `agent-access-review scan agents.yaml` |
+
+Secrets in your configs are masked before anything is written, so the output is safe to share.
+
+<details>
+<summary><b>New to this? Key terms in plain English</b></summary>
+<br/>
+
+| Term | Meaning |
+|---|---|
+| **AI agent** | An AI model that can take actions through tools: read files, query databases, send email, run commands. |
+| **MCP (Model Context Protocol)** | The standard way apps like Claude Desktop, Cursor and VS Code plug tools into an AI. Each "MCP server" in a config is one tool the agent can use. |
+| **User access review (UAR)** | The periodic check where each person's access is listed, an owner confirms it's still needed, and the rest is revoked. Auditors test it under SOX and SOC 2. |
+| **ITGC** | IT General Controls: the baseline controls (access, change management, operations) auditors test for financial reporting. |
+| **Non-human identity** | An account used by software rather than a person: service accounts, API keys, and now AI agents. |
+| **Exfiltration path** | A route for data to leave the organization. Here: an agent that can read sensitive data, reads content an attacker can write, and can send data out. |
+| **Prompt injection** | Hiding instructions in content an AI reads (an email, web page or ticket) so it does something its user never asked for. |
+| **OSCAL** | NIST's machine-readable format for security controls and assessment results, so GRC tools can import findings automatically. |
+
+</details>
+
 ## Problem
 
 Every SOX and SOC 2 program runs quarterly user access reviews: list who has access to what, have an owner confirm it's still needed, revoke the rest, keep the evidence. AI agents now hold the same kind of access (API tokens, database connections, shell access, mailboxes), and almost nobody reviews them:
@@ -106,7 +148,7 @@ flowchart LR
 
 1. **Discover.** Point it at files or folders. It reads two formats:
    - **MCP configs** (Claude Desktop, Cursor, VS Code `.vscode/mcp.json`): local `npx` / `uvx` / `docker` servers and remote HTTP servers. These carry no owner or approval, which is exactly why they're the shadow-AI problem.
-   - **Agent manifests** ([`agents.yaml`](examples/agents.yaml)): a governed record for LangChain, CrewAI or custom agents, with owner, approval, tools, scopes, credentials and last-used dates.
+   - **Agent manifests** ([`agents.yaml`](agent_access_review/examples/agents.yaml)): a governed record for LangChain, CrewAI or custom agents, with owner, approval, tools, scopes, credentials and last-used dates.
 2. **Classify.** An MCP config only says which server runs, not what it can do. The [capability catalog](agent_access_review/catalog.yaml) turns a server name into a grant: actions, data classification, whether it ingests untrusted content and whether it can send data out. Unknown servers are flagged (AAR-12), never assumed safe.
 3. **Redact, then hash.** Secrets are masked during parsing, before anything is stored, so evidence can be shared with auditors. Each agent's inventory and redacted source record are hashed with SHA-256 over canonical JSON, so any later edit to the evidence is detectable.
 4. **Review.** Every tool grant gets a recommended decision (**Keep / Modify / Revoke / Investigate**) and an empty column for the reviewer, the same shape as a user access review spreadsheet.
@@ -147,10 +189,10 @@ flowchart LR
 
 ## Sample run
 
-The [`examples/`](examples) folder has a developer's Claude Desktop config, a VS Code MCP config and three governed agents:
+The [bundled examples](agent_access_review/examples) are a developer's Claude Desktop config, a VS Code MCP config and three governed agents. The full output is committed in [`sample-output/`](sample-output): the [reviewer packet](sample-output/access-review.md), the [decision sheet](sample-output/access-review.csv), [hashed evidence](sample-output/evidence) and [OSCAL](sample-output/oscal/assessment-results.json).
 
 ```
-$ python -m agent_access_review scan examples --as-of 2026-10-12
+$ agent-access-review demo
 AGENT                        TOOLS  HIGH   MED   LOW
 support-copilot                  2     0     0     0
 finance-ops-agent                4     4     3     0
@@ -209,20 +251,26 @@ Some of what it finds:
 - **claude-desktop-config** gives an agent the whole `/Users/dev` home directory, an unsandboxed terminal, a GitHub token and a database password in plain text, and runs four unpinned packages.
 - **support-copilot** passes every check: it writes to tickets, but a human approves before anything is sent.
 
-Every CI run publishes the full packet on the [Actions summary page](https://github.com/Mihirajmera/agent-access-review/actions/workflows/tests.yml) and as a downloadable artifact.
+CI regenerates `sample-output/` on every push and fails if it differs from what's committed, so the sample always matches the current code.
+
+## How to read the results
+
+**Recommended decision** (one per tool grant, in the packet and the CSV):
+
+| Decision | Meaning | What the owner does |
+|---|---|---|
+| **Keep** | No findings on this tool | Confirm it's still needed and sign off |
+| **Modify** | The access is needed but unsafe as configured | Narrow scopes, add human approval, move secrets to a vault, pin the version |
+| **Revoke** | Unused for 90+ days | Remove it; re-request if it's needed again |
+| **Investigate** | The tool isn't in the capability catalog, so its access can't be judged | Find out what it can do, then add it to [`catalog.yaml`](agent_access_review/catalog.yaml) |
+
+**Severity:** *high* means fix before the agent's next use (an unowned agent, plaintext secrets, an exfiltration path). *Medium* means fix within the review cycle (stale approval, unpinned package). *Low* means a gap in evidence rather than a risk (no usage logs, no rotation date).
+
+The reviewer fills in the empty *Reviewer decision* column and the sign-off table. The completed packet plus the hashed evidence files are the audit evidence for the review.
 
 ## Run it
 
-Requirements: Python 3.11+. No cloud account or API keys needed.
-
-Install the CLI straight from a release:
-
-```bash
-pip install "git+https://github.com/Mihirajmera/agent-access-review@v0.1.0"
-agent-access-review scan ~/Library/Application\ Support/Claude/claude_desktop_config.json
-```
-
-Or work from source (dependencies are pinned exactly in `requirements.txt`):
+Install from a release (shown in the [Quick start](#quick-start-2-minutes)), or work from source (dependencies are pinned exactly in `requirements.txt`):
 
 ```bash
 git clone https://github.com/Mihirajmera/agent-access-review.git
@@ -230,18 +278,18 @@ cd agent-access-review
 python -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
-python -m agent_access_review scan examples           # writes review/
+python -m agent_access_review demo                    # writes review-demo/
 pytest -q
 ```
 
-Options: `--out DIR` (default `review/`), `--as-of YYYY-MM-DD` (date used for recertification, rotation and dormancy), `--fail-on high|medium|low` (exit 1 if a finding is at or above that severity).
+`scan` options: `--out DIR` (default `review/`), `--as-of YYYY-MM-DD` (date used for recertification, rotation and dormancy), `--fail-on high|medium|low` (exit 1 if a finding is at or above that severity). `agent-access-review --help` lists examples.
 
 ### As a CI gate
 
 Keep `agents.yaml` in the repo that deploys your agents, and block merges that introduce high-risk access:
 
 ```yaml
-- run: pip install "git+https://github.com/Mihirajmera/agent-access-review@v0.1.0"
+- run: pip install "git+https://github.com/Mihirajmera/agent-access-review@v0.2.0"
 - run: agent-access-review scan agents.yaml --fail-on high
 ```
 
@@ -267,6 +315,10 @@ Pin to a release tag (or a commit SHA), not `main`, so a new version can't chang
 - **Feed usage from logs.** Populate `last_used` from MCP gateway or proxy logs so AAR-08 is evidence-based rather than self-reported.
 - **Run the review in the GRC platform.** Push the decision sheet into ServiceNow GRC or SailPoint as a certification campaign with owners, due dates and escalation, and auto-revoke grants that aren't certified.
 - **Close the loop.** Turn `not-satisfied` OSCAL findings into POA&M items with owners and due dates.
+
+## Contributing
+
+The easiest way to help is to add an MCP server to the capability catalog: see [CONTRIBUTING.md](CONTRIBUTING.md). Changes are listed in the [CHANGELOG](CHANGELOG.md).
 
 ## License
 

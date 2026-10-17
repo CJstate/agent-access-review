@@ -73,3 +73,11 @@ def test_cli_gate(tmp_path, capsys):
 
 def test_cli_nothing_found(tmp_path):
     assert main(['scan', str(tmp_path), '--out', str(tmp_path / 'out')]) == 2
+
+
+def test_demo_runs_on_bundled_examples(tmp_path, capsys):
+    assert main(['demo', '--out', str(tmp_path / 'demo')]) == 0
+    out = capsys.readouterr().out
+    assert 'finance-ops-agent' in out and 'Next:' in out
+    # sources are recorded relative to the scanned folder, not this machine's install path
+    assert '`examples/agents.yaml`' in (tmp_path / 'demo' / 'access-review.md').read_text(encoding='utf-8')

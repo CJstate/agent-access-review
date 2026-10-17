@@ -7,7 +7,7 @@ import pytest
 from agent_access_review.model import Agent, Credential, Grant
 
 AS_OF = date(2026, 10, 12)
-EXAMPLES = Path(__file__).resolve().parent.parent / 'examples'
+EXAMPLES = Path(__file__).resolve().parent.parent / 'agent_access_review' / 'examples'
 
 
 @pytest.fixture

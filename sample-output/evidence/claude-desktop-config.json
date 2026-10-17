@@ -1,0 +1,433 @@
+{
+  "agent_id": "claude-desktop-config",
+  "collected": "2026-10-12T00:00:00+00:00",
+  "hash_scope": "sha256 of canonical JSON (sorted keys, no spaces) of {inventory, source_record}",
+  "inventory": {
+    "approved_by": null,
+    "approved_on": null,
+    "credentials": [
+      {
+        "hardcoded": true,
+        "last_rotated": null,
+        "name": "github.GITHUB_PERSONAL_ACCESS_TOKEN"
+      },
+      {
+        "hardcoded": true,
+        "last_rotated": null,
+        "name": "customers-db.connection-string"
+      },
+      {
+        "hardcoded": true,
+        "last_rotated": null,
+        "name": "internal-crm.arg.api-key"
+      }
+    ],
+    "grants": [
+      {
+        "actions": [
+          "delete",
+          "read",
+          "write"
+        ],
+        "category": "filesystem",
+        "data_classification": "confidential",
+        "egress": false,
+        "endpoint": null,
+        "known": true,
+        "last_used": null,
+        "package": "@modelcontextprotocol/server-filesystem",
+        "pinned": false,
+        "requires_approval": false,
+        "resource": "/Users/dev",
+        "sandboxed": false,
+        "scopes": [
+          "/Users/dev"
+        ],
+        "tool": "filesystem",
+        "untrusted_input": false
+      },
+      {
+        "actions": [
+          "read",
+          "write"
+        ],
+        "category": "github",
+        "data_classification": "confidential",
+        "egress": true,
+        "endpoint": null,
+        "known": true,
+        "last_used": null,
+        "package": "ghcr.io/github/github-mcp-server",
+        "pinned": false,
+        "requires_approval": false,
+        "resource": "ghcr.io/github/github-mcp-server",
+        "sandboxed": false,
+        "scopes": [],
+        "tool": "github",
+        "untrusted_input": true
+      },
+      {
+        "actions": [
+          "read"
+        ],
+        "category": "fetch",
+        "data_classification": "public",
+        "egress": true,
+        "endpoint": null,
+        "known": true,
+        "last_used": null,
+        "package": "mcp-server-fetch",
+        "pinned": false,
+        "requires_approval": false,
+        "resource": "mcp-server-fetch",
+        "sandboxed": false,
+        "scopes": [],
+        "tool": "fetch",
+        "untrusted_input": true
+      },
+      {
+        "actions": [
+          "read"
+        ],
+        "category": "postgres",
+        "data_classification": "restricted",
+        "egress": false,
+        "endpoint": null,
+        "known": true,
+        "last_used": null,
+        "package": "@modelcontextprotocol/server-postgres",
+        "pinned": true,
+        "requires_approval": false,
+        "resource": "postgresql://analyst:***REDACTED***@db.internal:5432/customers",
+        "sandboxed": false,
+        "scopes": [],
+        "tool": "customers-db",
+        "untrusted_input": false
+      },
+      {
+        "actions": [
+          "delete",
+          "execute",
+          "read",
+          "write"
+        ],
+        "category": "shell",
+        "data_classification": "confidential",
+        "egress": false,
+        "endpoint": null,
+        "known": true,
+        "last_used": null,
+        "package": "@wonderwhy-er/desktop-commander",
+        "pinned": false,
+        "requires_approval": false,
+        "resource": "@wonderwhy-er/desktop-commander",
+        "sandboxed": false,
+        "scopes": [],
+        "tool": "terminal",
+        "untrusted_input": false
+      },
+      {
+        "actions": [
+          "unknown"
+        ],
+        "category": null,
+        "data_classification": "internal",
+        "egress": false,
+        "endpoint": null,
+        "known": false,
+        "last_used": null,
+        "package": "python",
+        "pinned": null,
+        "requires_approval": false,
+        "resource": "python /opt/tools/crm_server.py --api-key=***REDACTED***",
+        "sandboxed": false,
+        "scopes": [],
+        "tool": "internal-crm",
+        "untrusted_input": false
+      }
+    ],
+    "id": "claude-desktop-config",
+    "name": "MCP host (claude_desktop_config.json)",
+    "owner": null,
+    "source": "examples/claude_desktop_config.json",
+    "source_type": "mcp-config"
+  },
+  "results": [
+    {
+      "check_id": "AAR-01",
+      "findings": [
+        {
+          "agent_id": "claude-desktop-config",
+          "check_id": "AAR-01",
+          "message": "No accountable human owner is recorded for this agent.",
+          "recommendation": "Assign an owner who answers for what the agent does, or decommission it.",
+          "severity": "high",
+          "tool": null
+        }
+      ],
+      "status": "FAIL",
+      "title": "Every agent has an accountable human owner"
+    },
+    {
+      "check_id": "AAR-02",
+      "findings": [
+        {
+          "agent_id": "claude-desktop-config",
+          "check_id": "AAR-02",
+          "message": "Agent access has no recorded approval.",
+          "recommendation": "Route the agent through access approval before its next use.",
+          "severity": "high",
+          "tool": null
+        }
+      ],
+      "status": "FAIL",
+      "title": "Agent access is approved and recertified within 90 days"
+    },
+    {
+      "check_id": "AAR-03",
+      "findings": [
+        {
+          "agent_id": "claude-desktop-config",
+          "check_id": "AAR-03",
+          "message": "filesystem can delete / write confidential data without a human approving each action.",
+          "recommendation": "Require human confirmation for these actions, or reduce the tool to read-only.",
+          "severity": "high",
+          "tool": "filesystem"
+        },
+        {
+          "agent_id": "claude-desktop-config",
+          "check_id": "AAR-03",
+          "message": "github can write confidential data without a human approving each action.",
+          "recommendation": "Require human confirmation for these actions, or reduce the tool to read-only.",
+          "severity": "high",
+          "tool": "github"
+        },
+        {
+          "agent_id": "claude-desktop-config",
+          "check_id": "AAR-03",
+          "message": "terminal can delete / write confidential data without a human approving each action.",
+          "recommendation": "Require human confirmation for these actions, or reduce the tool to read-only.",
+          "severity": "high",
+          "tool": "terminal"
+        }
+      ],
+      "status": "FAIL",
+      "title": "Privileged agent actions require human approval"
+    },
+    {
+      "check_id": "AAR-04",
+      "findings": [
+        {
+          "agent_id": "claude-desktop-config",
+          "check_id": "AAR-04",
+          "message": "Over-broad access on filesystem: /Users/dev.",
+          "recommendation": "Narrow the grant to the specific directories, repositories or scopes the agent needs.",
+          "severity": "high",
+          "tool": "filesystem"
+        }
+      ],
+      "status": "FAIL",
+      "title": "Tool scopes follow least privilege"
+    },
+    {
+      "check_id": "AAR-05",
+      "findings": [
+        {
+          "agent_id": "claude-desktop-config",
+          "check_id": "AAR-05",
+          "message": "terminal can execute arbitrary commands on the host without a sandbox.",
+          "recommendation": "Run the tool in a container or VM with no host credentials mounted, or remove it.",
+          "severity": "high",
+          "tool": "terminal"
+        }
+      ],
+      "status": "FAIL",
+      "title": "Code and shell execution is sandboxed"
+    },
+    {
+      "check_id": "AAR-06",
+      "findings": [
+        {
+          "agent_id": "claude-desktop-config",
+          "check_id": "AAR-06",
+          "message": "Credential github.GITHUB_PERSONAL_ACCESS_TOKEN is stored in plain text in the agent configuration.",
+          "recommendation": "Revoke and reissue it, then load it from a secret manager or environment reference.",
+          "severity": "high",
+          "tool": "github"
+        },
+        {
+          "agent_id": "claude-desktop-config",
+          "check_id": "AAR-06",
+          "message": "Credential customers-db.connection-string is stored in plain text in the agent configuration.",
+          "recommendation": "Revoke and reissue it, then load it from a secret manager or environment reference.",
+          "severity": "high",
+          "tool": "customers-db"
+        },
+        {
+          "agent_id": "claude-desktop-config",
+          "check_id": "AAR-06",
+          "message": "Credential internal-crm.arg.api-key is stored in plain text in the agent configuration.",
+          "recommendation": "Revoke and reissue it, then load it from a secret manager or environment reference.",
+          "severity": "high",
+          "tool": "internal-crm"
+        }
+      ],
+      "status": "FAIL",
+      "title": "No credentials are hardcoded in agent configuration"
+    },
+    {
+      "check_id": "AAR-07",
+      "findings": [],
+      "status": "PASS",
+      "title": "Agent credentials are rotated within 90 days"
+    },
+    {
+      "check_id": "AAR-08",
+      "findings": [
+        {
+          "agent_id": "claude-desktop-config",
+          "check_id": "AAR-08",
+          "message": "No tool usage is logged, so dormant access cannot be identified.",
+          "recommendation": "Log tool calls per agent so unused access can be found and removed.",
+          "severity": "low",
+          "tool": null
+        }
+      ],
+      "status": "FAIL",
+      "title": "Dormant agent access is removed after 90 days"
+    },
+    {
+      "check_id": "AAR-09",
+      "findings": [
+        {
+          "agent_id": "claude-desktop-config",
+          "check_id": "AAR-09",
+          "message": "Exfiltration path: reads sensitive data (customers-db, filesystem, github, terminal), ingests untrusted content (fetch, github) and can send data out (fetch, github) with no human approval. A prompt injection in the untrusted content could leak the data.",
+          "recommendation": "Break the chain: split the agent, remove one leg, or require approval on every egress action.",
+          "severity": "high",
+          "tool": null
+        }
+      ],
+      "status": "FAIL",
+      "title": "No unmitigated data exfiltration path"
+    },
+    {
+      "check_id": "AAR-10",
+      "findings": [
+        {
+          "agent_id": "claude-desktop-config",
+          "check_id": "AAR-10",
+          "message": "filesystem runs @modelcontextprotocol/server-filesystem without a pinned version, so a new upstream release runs automatically.",
+          "recommendation": "Pin an exact version (npm/PyPI) or image digest and update it through change control.",
+          "severity": "medium",
+          "tool": "filesystem"
+        },
+        {
+          "agent_id": "claude-desktop-config",
+          "check_id": "AAR-10",
+          "message": "github runs ghcr.io/github/github-mcp-server without a pinned version, so a new upstream release runs automatically.",
+          "recommendation": "Pin an exact version (npm/PyPI) or image digest and update it through change control.",
+          "severity": "medium",
+          "tool": "github"
+        },
+        {
+          "agent_id": "claude-desktop-config",
+          "check_id": "AAR-10",
+          "message": "fetch runs mcp-server-fetch without a pinned version, so a new upstream release runs automatically.",
+          "recommendation": "Pin an exact version (npm/PyPI) or image digest and update it through change control.",
+          "severity": "medium",
+          "tool": "fetch"
+        },
+        {
+          "agent_id": "claude-desktop-config",
+          "check_id": "AAR-10",
+          "message": "terminal runs @wonderwhy-er/desktop-commander without a pinned version, so a new upstream release runs automatically.",
+          "recommendation": "Pin an exact version (npm/PyPI) or image digest and update it through change control.",
+          "severity": "medium",
+          "tool": "terminal"
+        }
+      ],
+      "status": "FAIL",
+      "title": "Tool packages are pinned to a version"
+    },
+    {
+      "check_id": "AAR-11",
+      "findings": [],
+      "status": "PASS",
+      "title": "Remote tools use encrypted transport"
+    },
+    {
+      "check_id": "AAR-12",
+      "findings": [
+        {
+          "agent_id": "claude-desktop-config",
+          "check_id": "AAR-12",
+          "message": "internal-crm (python /opt/tools/crm_server.py --api-key=***REDACTED***) is not in the capability catalog, so its access cannot be assessed.",
+          "recommendation": "Document what the tool can read, write and send, and add it to catalog.yaml.",
+          "severity": "medium",
+          "tool": "internal-crm"
+        }
+      ],
+      "status": "FAIL",
+      "title": "Every tool's capabilities are inventoried"
+    }
+  ],
+  "review_as_of": "2026-10-12",
+  "sha256": "8c3873a758992e743471dcd787f8b77e6ca1810393400e07fd9a8ae1a184ed5a",
+  "source": "examples/claude_desktop_config.json",
+  "source_record": {
+    "mcpServers": {
+      "customers-db": {
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-postgres@0.6.2",
+          "postgresql://analyst:***REDACTED***@db.internal:5432/customers"
+        ],
+        "command": "npx"
+      },
+      "fetch": {
+        "args": [
+          "mcp-server-fetch"
+        ],
+        "command": "uvx"
+      },
+      "filesystem": {
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-filesystem",
+          "/Users/dev"
+        ],
+        "command": "npx"
+      },
+      "github": {
+        "args": [
+          "run",
+          "-i",
+          "--rm",
+          "-e",
+          "GITHUB_PERSONAL_ACCESS_TOKEN",
+          "ghcr.io/github/github-mcp-server"
+        ],
+        "command": "docker",
+        "env": {
+          "GITHUB_PERSONAL_ACCESS_TOKEN": "***REDACTED***"
+        }
+      },
+      "internal-crm": {
+        "args": [
+          "/opt/tools/crm_server.py",
+          "--api-key=***REDACTED***"
+        ],
+        "command": "python"
+      },
+      "terminal": {
+        "args": [
+          "-y",
+          "@wonderwhy-er/desktop-commander"
+        ],
+        "command": "npx"
+      }
+    }
+  },
+  "source_type": "mcp-config"
+}

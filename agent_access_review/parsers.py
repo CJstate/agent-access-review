@@ -41,18 +41,20 @@ def is_reference(value: str) -> bool:
             or (v.startswith('<') and v.endswith('>')))
 
 
-def load(path: Path) -> list[Agent]:
-    """Parse one file. Returns [] for files that are neither format."""
+def load(path: Path, source: str | None = None) -> list[Agent]:
+    """Parse one file. Returns [] for files that are neither format. `source` is the path recorded
+    in the inventory and evidence (defaults to the path as given)."""
+    source = source or path.as_posix()
     text = path.read_text(encoding='utf-8')
     if path.suffix.lower() == '.json':
         data = json.loads(text)
         servers = data.get('mcpServers', data.get('servers')) if isinstance(data, dict) else None
         if isinstance(servers, dict):
-            return [parse_mcp_config(path, data, servers)]
+            return [parse_mcp_config(path, data, servers, source)]
     elif path.suffix.lower() in {'.yaml', '.yml'}:
         data = yaml.safe_load(text) or {}
         if isinstance(data, dict) and isinstance(data.get('agents'), list):
-            return parse_manifest(path, data)
+            return parse_manifest(path, data, source)
     return []
 
 
@@ -67,8 +69,11 @@ def discover(paths: list[Path]) -> list[Agent]:
         for f in files:
             if f.suffix.lower() not in {'.json', '.yaml', '.yml'}:
                 continue
+            # Inside a scanned folder, record "<folder>/<relative path>" so evidence (and its hash)
+            # doesn't depend on where the folder sits on this machine.
+            source = f'{p.name}/{f.relative_to(p).as_posix()}' if p.is_dir() else None
             try:
-                agents.extend(load(f))
+                agents.extend(load(f, source))
             except (ValueError, yaml.YAMLError, KeyError, TypeError) as e:
                 # JSON-with-comments configs and unrelated files land here; skip, don't abort the review
                 print(f'warning: skipped {f}: {type(e).__name__}: {e}', file=sys.stderr)
@@ -77,9 +82,10 @@ def discover(paths: list[Path]) -> list[Agent]:
 
 # --------------------------------------------------------------------------- MCP configs
 
-def parse_mcp_config(path: Path, data: dict, servers: dict) -> Agent:
+def parse_mcp_config(path: Path, data: dict, servers: dict, source: str | None = None) -> Agent:
     agent = Agent(id=_slug(path.stem if path.stem not in {'mcp', 'config'} else f'{path.parent.name}-{path.stem}'),
-                  name=f'MCP host ({path.name})', source=path.as_posix(), source_type='mcp-config')
+                  name=f'MCP host ({path.name})', source=source or path.as_posix(),
+                  source_type='mcp-config')
     raw = copy.deepcopy(data)
     raw_servers = raw.get('mcpServers', raw.get('servers'))
     for name, spec in servers.items():
@@ -216,13 +222,13 @@ def redact_arg(arg: str) -> str:
 
 # --------------------------------------------------------------------------- manifests
 
-def parse_manifest(path: Path, data: dict) -> list[Agent]:
+def parse_manifest(path: Path, data: dict, source: str | None = None) -> list[Agent]:
     agents = []
     for rec in data['agents']:
         agent = Agent(
             id=_slug(rec['id']),
             name=rec.get('name', rec['id']),
-            source=path.as_posix(),
+            source=source or path.as_posix(),
             source_type='agent-manifest',
             owner=rec.get('owner'),
             approved_by=rec.get('approved_by'),

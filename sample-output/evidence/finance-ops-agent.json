@@ -1,0 +1,319 @@
+{
+  "agent_id": "finance-ops-agent",
+  "collected": "2026-10-12T00:00:00+00:00",
+  "hash_scope": "sha256 of canonical JSON (sorted keys, no spaces) of {inventory, source_record}",
+  "inventory": {
+    "approved_by": "cfo-office",
+    "approved_on": "2026-03-10",
+    "credentials": [
+      {
+        "hardcoded": false,
+        "last_rotated": "2025-12-01",
+        "name": "netsuite.NETSUITE_TOKEN"
+      },
+      {
+        "hardcoded": false,
+        "last_rotated": "2026-09-15",
+        "name": "sharepoint.GRAPH_CLIENT_SECRET"
+      }
+    ],
+    "grants": [
+      {
+        "actions": [
+          "read",
+          "write"
+        ],
+        "category": "erp",
+        "data_classification": "restricted",
+        "egress": false,
+        "endpoint": null,
+        "known": true,
+        "last_used": "2026-10-09",
+        "package": null,
+        "pinned": null,
+        "requires_approval": false,
+        "resource": "netsuite:vendor-bills",
+        "sandboxed": false,
+        "scopes": [],
+        "tool": "netsuite",
+        "untrusted_input": false
+      },
+      {
+        "actions": [
+          "read",
+          "send"
+        ],
+        "category": "email",
+        "data_classification": "confidential",
+        "egress": true,
+        "endpoint": null,
+        "known": true,
+        "last_used": "2026-10-10",
+        "package": null,
+        "pinned": null,
+        "requires_approval": false,
+        "resource": "mailbox:ap@example.com",
+        "sandboxed": false,
+        "scopes": [],
+        "tool": "outlook",
+        "untrusted_input": true
+      },
+      {
+        "actions": [
+          "read"
+        ],
+        "category": "document-store",
+        "data_classification": "confidential",
+        "egress": false,
+        "endpoint": null,
+        "known": true,
+        "last_used": "2026-10-01",
+        "package": null,
+        "pinned": null,
+        "requires_approval": false,
+        "resource": "sharepoint:finance",
+        "sandboxed": false,
+        "scopes": [
+          "Sites.Read.All"
+        ],
+        "tool": "sharepoint",
+        "untrusted_input": false
+      },
+      {
+        "actions": [
+          "read"
+        ],
+        "category": "ocr",
+        "data_classification": "confidential",
+        "egress": false,
+        "endpoint": null,
+        "known": true,
+        "last_used": "2026-05-01",
+        "package": null,
+        "pinned": null,
+        "requires_approval": false,
+        "resource": "ocr-service:receipts",
+        "sandboxed": false,
+        "scopes": [],
+        "tool": "expense-ocr",
+        "untrusted_input": false
+      }
+    ],
+    "id": "finance-ops-agent",
+    "name": "Finance Ops Agent",
+    "owner": "marco.diaz@example.com",
+    "source": "examples/agents.yaml",
+    "source_type": "agent-manifest"
+  },
+  "results": [
+    {
+      "check_id": "AAR-01",
+      "findings": [],
+      "status": "PASS",
+      "title": "Every agent has an accountable human owner"
+    },
+    {
+      "check_id": "AAR-02",
+      "findings": [
+        {
+          "agent_id": "finance-ops-agent",
+          "check_id": "AAR-02",
+          "message": "Access was last approved 216 days ago by cfo-office (limit 90).",
+          "recommendation": "Recertify: the owner confirms each tool below is still needed.",
+          "severity": "medium",
+          "tool": null
+        }
+      ],
+      "status": "FAIL",
+      "title": "Agent access is approved and recertified within 90 days"
+    },
+    {
+      "check_id": "AAR-03",
+      "findings": [
+        {
+          "agent_id": "finance-ops-agent",
+          "check_id": "AAR-03",
+          "message": "netsuite can write restricted data without a human approving each action.",
+          "recommendation": "Require human confirmation for these actions, or reduce the tool to read-only.",
+          "severity": "high",
+          "tool": "netsuite"
+        },
+        {
+          "agent_id": "finance-ops-agent",
+          "check_id": "AAR-03",
+          "message": "outlook can send confidential data without a human approving each action.",
+          "recommendation": "Require human confirmation for these actions, or reduce the tool to read-only.",
+          "severity": "high",
+          "tool": "outlook"
+        }
+      ],
+      "status": "FAIL",
+      "title": "Privileged agent actions require human approval"
+    },
+    {
+      "check_id": "AAR-04",
+      "findings": [
+        {
+          "agent_id": "finance-ops-agent",
+          "check_id": "AAR-04",
+          "message": "Over-broad access on sharepoint: Sites.Read.All.",
+          "recommendation": "Narrow the grant to the specific directories, repositories or scopes the agent needs.",
+          "severity": "high",
+          "tool": "sharepoint"
+        }
+      ],
+      "status": "FAIL",
+      "title": "Tool scopes follow least privilege"
+    },
+    {
+      "check_id": "AAR-05",
+      "findings": [],
+      "status": "PASS",
+      "title": "Code and shell execution is sandboxed"
+    },
+    {
+      "check_id": "AAR-06",
+      "findings": [],
+      "status": "PASS",
+      "title": "No credentials are hardcoded in agent configuration"
+    },
+    {
+      "check_id": "AAR-07",
+      "findings": [
+        {
+          "agent_id": "finance-ops-agent",
+          "check_id": "AAR-07",
+          "message": "netsuite.NETSUITE_TOKEN was last rotated 315 days ago (limit 90).",
+          "recommendation": "Rotate the credential.",
+          "severity": "medium",
+          "tool": "netsuite"
+        }
+      ],
+      "status": "FAIL",
+      "title": "Agent credentials are rotated within 90 days"
+    },
+    {
+      "check_id": "AAR-08",
+      "findings": [
+        {
+          "agent_id": "finance-ops-agent",
+          "check_id": "AAR-08",
+          "message": "expense-ocr has not been used for 164 days.",
+          "recommendation": "Revoke this tool; re-request it if it is needed again.",
+          "severity": "medium",
+          "tool": "expense-ocr"
+        }
+      ],
+      "status": "FAIL",
+      "title": "Dormant agent access is removed after 90 days"
+    },
+    {
+      "check_id": "AAR-09",
+      "findings": [
+        {
+          "agent_id": "finance-ops-agent",
+          "check_id": "AAR-09",
+          "message": "Exfiltration path: reads sensitive data (expense-ocr, netsuite, outlook, sharepoint), ingests untrusted content (outlook) and can send data out (outlook) with no human approval. A prompt injection in the untrusted content could leak the data.",
+          "recommendation": "Break the chain: split the agent, remove one leg, or require approval on every egress action.",
+          "severity": "high",
+          "tool": null
+        }
+      ],
+      "status": "FAIL",
+      "title": "No unmitigated data exfiltration path"
+    },
+    {
+      "check_id": "AAR-10",
+      "findings": [],
+      "status": "PASS",
+      "title": "Tool packages are pinned to a version"
+    },
+    {
+      "check_id": "AAR-11",
+      "findings": [],
+      "status": "PASS",
+      "title": "Remote tools use encrypted transport"
+    },
+    {
+      "check_id": "AAR-12",
+      "findings": [],
+      "status": "PASS",
+      "title": "Every tool's capabilities are inventoried"
+    }
+  ],
+  "review_as_of": "2026-10-12",
+  "sha256": "2d8df8e3ad1e118163d8470d3037b5b7d1cf8485ecf7d213cab68a5bd60bc200",
+  "source": "examples/agents.yaml",
+  "source_record": {
+    "approved_by": "cfo-office",
+    "approved_on": "2026-03-10",
+    "credentials": [
+      {
+        "last_rotated": "2025-12-01",
+        "name": "NETSUITE_TOKEN",
+        "source": "env",
+        "tool": "netsuite"
+      },
+      {
+        "last_rotated": "2026-09-15",
+        "name": "GRAPH_CLIENT_SECRET",
+        "source": "vault",
+        "tool": "sharepoint"
+      }
+    ],
+    "framework": "crewai",
+    "id": "finance-ops-agent",
+    "name": "Finance Ops Agent",
+    "owner": "marco.diaz@example.com",
+    "tools": [
+      {
+        "actions": [
+          "read",
+          "write"
+        ],
+        "data_classification": "restricted",
+        "last_used": "2026-10-09",
+        "name": "netsuite",
+        "resource": "netsuite:vendor-bills",
+        "type": "erp"
+      },
+      {
+        "actions": [
+          "read",
+          "send"
+        ],
+        "data_classification": "confidential",
+        "egress": true,
+        "last_used": "2026-10-10",
+        "name": "outlook",
+        "resource": "mailbox:ap@example.com",
+        "type": "email",
+        "untrusted_input": true
+      },
+      {
+        "actions": [
+          "read"
+        ],
+        "data_classification": "confidential",
+        "last_used": "2026-10-01",
+        "name": "sharepoint",
+        "resource": "sharepoint:finance",
+        "scopes": [
+          "Sites.Read.All"
+        ],
+        "type": "document-store"
+      },
+      {
+        "actions": [
+          "read"
+        ],
+        "data_classification": "confidential",
+        "last_used": "2026-05-01",
+        "name": "expense-ocr",
+        "resource": "ocr-service:receipts",
+        "type": "ocr"
+      }
+    ]
+  },
+  "source_type": "agent-manifest"
+}

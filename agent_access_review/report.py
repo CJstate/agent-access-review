@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import os
 import uuid
 from collections import Counter
 from dataclasses import asdict
@@ -69,9 +70,18 @@ def _frameworks(check_id: str) -> str:
 
 # --------------------------------------------------------------------------- writers
 
+def build_time() -> datetime:
+    """Now, or SOURCE_DATE_EPOCH when set (the reproducible-builds convention), so a rerun on the
+    same inputs can produce byte-identical output."""
+    epoch = os.environ.get('SOURCE_DATE_EPOCH')
+    if epoch:
+        return datetime.fromtimestamp(int(epoch), timezone.utc)
+    return datetime.now(timezone.utc).replace(microsecond=0)
+
+
 def write_all(results: list[tuple[Agent, list[Finding]]], out: Path, as_of: date,
               collected: datetime | None = None) -> dict[str, Path]:
-    collected = collected or datetime.now(timezone.utc).replace(microsecond=0)
+    collected = collected or build_time()
     out.mkdir(parents=True, exist_ok=True)
     evidence = write_evidence(results, out / 'evidence', as_of, collected)
     paths = {
@@ -108,7 +118,7 @@ def write_evidence(results, folder: Path, as_of: date, collected: datetime) -> d
         }
         path = folder / f'{agent.id}.json'
         path.write_text(json.dumps(record, indent=2, sort_keys=True, default=_json_default) + '\n',
-                        encoding='utf-8')
+                        encoding='utf-8', newline='\n')
         index[agent.id] = (path, record['sha256'])
     return index
 
@@ -116,7 +126,7 @@ def write_evidence(results, folder: Path, as_of: date, collected: datetime) -> d
 def write_csv(results, path: Path) -> Path:
     """One row per grant, in the shape of a user access review spreadsheet."""
     with path.open('w', newline='', encoding='utf-8') as fh:
-        w = csv.writer(fh)
+        w = csv.writer(fh, lineterminator='\n')        # same bytes on every OS
         w.writerow(['agent_id', 'agent_name', 'owner', 'tool', 'category', 'resource', 'actions',
                     'data_classification', 'untrusted_input', 'egress', 'finding_ids',
                     'recommended_decision', 'reviewer_decision', 'reviewer', 'review_date'])
@@ -177,8 +187,14 @@ def write_markdown(results, path: Path, as_of: date, evidence: dict) -> Path:
               'I have reviewed each tool grant above and confirm the decisions recorded.', '',
               '| Role | Name | Date |', '|---|---|---|',
               '| Agent owner | | |', '| Reviewer | | |']
-    path.write_text('\n'.join(L) + '\n', encoding='utf-8')
+    path.write_text('\n'.join(L) + '\n', encoding='utf-8', newline='\n')
     return path
+
+
+def _uid(*parts) -> str:
+    """Deterministic UUID: the same review at the same time always gets the same IDs, and any
+    change to the timestamp or subject gives new ones."""
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, 'agent-access-review:' + '/'.join(map(str, parts))))
 
 
 def write_oscal(results, path: Path, as_of: date, collected: datetime, evidence: dict) -> Path:
@@ -188,7 +204,7 @@ def write_oscal(results, path: Path, as_of: date, collected: datetime, evidence:
     now = collected.isoformat()
     observations, obs_by_agent = [], {}
     for agent, findings in results:
-        oid = str(uuid.uuid4())
+        oid = _uid(now, 'observation', agent.id)
         obs_by_agent[agent.id] = oid
         ev_path, digest = evidence[agent.id]
         observations.append({
@@ -212,7 +228,7 @@ def write_oscal(results, path: Path, as_of: date, collected: datetime, evidence:
     for ctl, check_ids in sorted(by_control.items()):
         failing = [a.id for a, fs in results if any(f.check_id in check_ids for f in fs)]
         oscal_findings.append({
-            'uuid': str(uuid.uuid4()),
+            'uuid': _uid(now, 'finding', ctl),
             'title': f'{ctl}: {", ".join(check_ids)}',
             'description': '; '.join(CONTROLS[c]['title'] for c in check_ids),
             'target': {'type': 'objective-id', 'target-id': ctl.lower().replace('(', '.').replace(')', ''),
@@ -221,12 +237,12 @@ def write_oscal(results, path: Path, as_of: date, collected: datetime, evidence:
         })
 
     doc = {'assessment-results': {
-        'uuid': str(uuid.uuid4()),
+        'uuid': _uid(now, 'assessment-results'),
         'metadata': {'title': 'AI agent access review', 'last-modified': now,
                      'version': as_of.isoformat(), 'oscal-version': '1.1.2'},
         'import-ap': {'href': '#'},
         'results': [{
-            'uuid': str(uuid.uuid4()),
+            'uuid': _uid(now, 'result'),
             'title': f'Agent access review as of {as_of.isoformat()}',
             'description': 'Automated review of AI agent tool access, credentials and approvals.',
             'start': now, 'end': now,
@@ -237,5 +253,5 @@ def write_oscal(results, path: Path, as_of: date, collected: datetime, evidence:
             'findings': oscal_findings,
         }],
     }}
-    path.write_text(json.dumps(doc, indent=2) + '\n', encoding='utf-8')
+    path.write_text(json.dumps(doc, indent=2) + '\n', encoding='utf-8', newline='\n')
     return path

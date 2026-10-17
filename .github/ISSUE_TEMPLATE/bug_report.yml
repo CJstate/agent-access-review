@@ -1,0 +1,19 @@
+name: Bug report
+description: A wrong finding, a crash, or a config the tool can't read
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations: {required: true}
+  - type: textarea
+    id: config
+    attributes:
+      label: Config that reproduces it
+      description: Remove real tokens, passwords and hostnames first.
+      render: json
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
