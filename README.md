@@ -2,6 +2,7 @@
 
 [![Tests](https://github.com/Mihirajmera/agent-access-review/actions/workflows/tests.yml/badge.svg)](https://github.com/Mihirajmera/agent-access-review/actions/workflows/tests.yml)
 [![CodeQL](https://github.com/Mihirajmera/agent-access-review/actions/workflows/codeql.yml/badge.svg)](https://github.com/Mihirajmera/agent-access-review/actions/workflows/codeql.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Mihirajmera/agent-access-review/badge)](https://scorecard.dev/viewer/?uri=github.com/Mihirajmera/agent-access-review)
 [![M8ven Score](https://m8ven.ai/badge/mcp/mihirajmera-agent-access-review-153tex?v=85668ed5e44ea66da691a76b634c576b)](https://m8ven.ai/mcp/mihirajmera-agent-access-review-153tex?s=readme)
 
 **User access reviews for AI agents.** It finds every agent and MCP server an organization runs, works out what each one can read, write, execute and send, tests that access against 12 controls, and produces the packet an auditor expects: a reviewer sign-off sheet, hashed evidence, and OSCAL assessment results mapped to NIST 800-53, SOC 2, NIST AI RMF and the OWASP Top 10 for LLM Applications.
