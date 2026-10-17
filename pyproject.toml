@@ -27,7 +27,8 @@ Issues = "https://github.com/Mihirajmera/agent-access-review/issues"
 agent-access-review = "agent_access_review.__main__:main"
 
 [tool.setuptools]
-packages = ["agent_access_review"]
+packages = ["agent_access_review", "agent_access_review.examples"]
 
 [tool.setuptools.package-data]
-agent_access_review = ["*.yaml", "examples/*"]
+agent_access_review = ["*.yaml"]
+"agent_access_review.examples" = ["*"]

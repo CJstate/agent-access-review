@@ -26,14 +26,15 @@ jobs:
       - name: Run tests
         run: pytest -q
 
-      # Install the package the way users do, run the demo, and check that the committed
-      # sample-output/ is exactly what this version produces.
+      - name: Wheel ships catalogs, examples and console script
+        run: python scripts/check_wheel.py
+
+      # Run the demo and check that the committed sample-output/ is exactly what this version produces.
       - name: Demo and sample output are current
         env:
           SOURCE_DATE_EPOCH: '1791763200'
         run: |
-          pip install --no-deps --no-build-isolation .
-          agent-access-review demo --out sample-output
+          python -m agent_access_review demo --out sample-output
           git diff --exit-code sample-output/
           cat sample-output/access-review.md >> "$GITHUB_STEP_SUMMARY"
 
