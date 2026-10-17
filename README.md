@@ -24,7 +24,7 @@ Then review your own setup:
 | Tool | Where its MCP config lives | Command |
 |---|---|---|
 | Claude Desktop (macOS) | `~/Library/Application Support/Claude/claude_desktop_config.json` | `agent-access-review scan ~/Library/Application\ Support/Claude/claude_desktop_config.json` |
-| Claude Desktop (Windows) | `%APPDATA%\Claude\claude_desktop_config.json` | `agent-access-review scan "%APPDATA%\Claude\claude_desktop_config.json"` |
+| Claude Desktop (Windows) | `%APPDATA%\Claude\claude_desktop_config.json` | PowerShell: `agent-access-review scan "$env:APPDATA\Claude\claude_desktop_config.json"` |
 | Cursor | `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (project) | `agent-access-review scan ~/.cursor/mcp.json` |
 | VS Code | `.vscode/mcp.json` in a project | `agent-access-review scan .vscode/mcp.json` |
 | Your own agents | an [`agents.yaml`](agent_access_review/examples/agents.yaml) you maintain | `agent-access-review scan agents.yaml` |

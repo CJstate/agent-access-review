@@ -21,7 +21,7 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install --require-hashes -r requirements.txt
 
       - name: Run tests
         run: pytest -q
@@ -32,7 +32,7 @@ jobs:
         env:
           SOURCE_DATE_EPOCH: '1791763200'
         run: |
-          pip install .
+          pip install --no-deps --no-build-isolation .
           agent-access-review demo --out sample-output
           git diff --exit-code sample-output/
           cat sample-output/access-review.md >> "$GITHUB_STEP_SUMMARY"
