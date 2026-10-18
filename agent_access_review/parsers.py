@@ -57,10 +57,64 @@ def load(path: Path, source: str | None = None) -> list[Agent]:
         raise ConfigError(f'unexpected structure ({type(e).__name__}: {e})') from e
 
 
+def _strip_jsonc(text: str) -> str:
+    """Strip //, /* */ comments and trailing commas from JSON-with-comments.
+
+    VS Code writes `.vscode/mcp.json` with comments, so a plain json.loads
+    skips those servers entirely (issue #5). Scanning is string-aware: `//`
+    inside a string value (e.g. "https://...") is left alone, and trailing
+    commas before } or ] are dropped.
+    """
+    out = []
+    i, n = 0, len(text)
+    in_string = False
+    while i < n:
+        ch = text[i]
+        if in_string:
+            out.append(ch)
+            if ch == '\\' and i + 1 < n:          # escaped char inside string
+                out.append(text[i + 1])
+                i += 2
+                continue
+            if ch == '"':
+                in_string = False
+            i += 1
+            continue
+        if ch == '"':
+            in_string = True
+            out.append(ch)
+            i += 1
+            continue
+        if ch == '/' and i + 1 < n and text[i + 1] == '/':
+            i = text.find('\n', i)                # line comment: keep the newline
+            i = n if i == -1 else i
+            continue
+        if ch == '/' and i + 1 < n and text[i + 1] == '*':
+            end = text.find('*/', i + 2)
+            i = n if end == -1 else end + 2
+            continue
+        if ch == ',':                              # trailing comma?
+            j = i + 1
+            while j < n and text[j] in ' \t\r\n':
+                j += 1
+            if j < n and text[j] in '}]':
+                i += 1                              # drop it
+                continue
+        out.append(ch)
+        i += 1
+    return ''.join(out)
+
+
 def _load(path: Path, source: str) -> list[Agent]:
     text = path.read_text(encoding='utf-8')
     if path.suffix.lower() == '.json':
-        data = json.loads(text)
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError:
+            # VS Code's mcp.json allows comments (JSONC); retry after stripping
+            # them and trailing commas. Plain JSON that failed for other reasons
+            # still fails here and is reported as before.
+            data = json.loads(_strip_jsonc(text))
         servers = data.get('mcpServers', data.get('servers')) if isinstance(data, dict) else None
         if isinstance(servers, dict):
             return [parse_mcp_config(path, data, servers, source)]

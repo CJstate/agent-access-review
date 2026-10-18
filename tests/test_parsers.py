@@ -100,3 +100,34 @@ def test_malformed_structures_are_reported_not_crashed(tmp_path, write_json, cap
     write_json('mcp-ok.json', {'mcpServers': {'fetch': {'command': 'uvx', 'args': ['mcp-server-fetch']}}})
     agents = discover([tmp_path])
     assert [a.id for a in agents] == ['mcp-ok'] and 'skipped' in capsys.readouterr().err
+
+
+def test_jsonc_config_with_comments_parses(tmp_path):
+    # VS Code allows comments in .vscode/mcp.json (issue #5); those files used
+    # to fail json.loads and their servers were never reviewed.
+    p = tmp_path / 'mcp.json'
+    p.write_text(
+        '// Local dev MCP servers\n'
+        '{\n'
+        '  "mcpServers": {\n'
+        '    /* the fetch server needs no auth */\n'
+        '    "fetch": {"command": "uvx", "args": ["mcp-server-fetch"]},\n'
+        '    "web": {"url": "https://example.com/mcp"},\n'
+        '  },\n'
+        '}\n',
+        encoding='utf-8',
+    )
+    [agent] = load(p)
+    by_tool = {g.tool: g for g in agent.grants}
+    assert by_tool['fetch'].resource == 'mcp-server-fetch'
+    # A URL containing // must survive comment stripping.
+    assert by_tool['web'].endpoint == 'https://example.com/mcp'
+
+
+def test_jsonc_strip_leaves_urls_and_escapes_intact():
+    from agent_access_review.parsers import _strip_jsonc
+    text = '{"u": "https://a.example.com/x", "s": "not \\"/* a comment */\\"", "n": 1}'
+    assert _strip_jsonc(text) == text
+    import json
+    out = _strip_jsonc('{\n  // gone\n  "a": 1, /* gone */ "b": 2,\n}')
+    assert json.loads(out) == {'a': 1, 'b': 2}
