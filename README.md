@@ -1,5 +1,6 @@
 # agent-access-review
 
+[![PyPI](https://img.shields.io/pypi/v/agent-access-review)](https://pypi.org/project/agent-access-review/)
 [![Tests](https://github.com/Mihirajmera/agent-access-review/actions/workflows/tests.yml/badge.svg)](https://github.com/Mihirajmera/agent-access-review/actions/workflows/tests.yml)
 [![CodeQL](https://github.com/Mihirajmera/agent-access-review/actions/workflows/codeql.yml/badge.svg)](https://github.com/Mihirajmera/agent-access-review/actions/workflows/codeql.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Mihirajmera/agent-access-review/badge)](https://scorecard.dev/viewer/?uri=github.com/Mihirajmera/agent-access-review)
@@ -16,7 +17,7 @@
 You need Python 3.11+. No cloud account, API keys or network access.
 
 ```bash
-pip install "git+https://github.com/Mihirajmera/agent-access-review@v0.2.0"
+pip install agent-access-review
 agent-access-review demo
 ```
 
@@ -292,7 +293,7 @@ pytest -q
 Keep `agents.yaml` in the repo that deploys your agents, and block merges that introduce high-risk access:
 
 ```yaml
-- run: pip install "git+https://github.com/Mihirajmera/agent-access-review@v0.2.0"
+- run: pip install agent-access-review
 - run: agent-access-review scan agents.yaml --fail-on high
 ```
 

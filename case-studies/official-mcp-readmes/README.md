@@ -54,7 +54,7 @@ Scanning real configs found two gaps in agent-access-review, both fixed in this 
 ## Reproduce
 
 ```bash
-pip install "git+https://github.com/Mihirajmera/agent-access-review"
+pip install agent-access-review
 agent-access-review scan case-studies/official-mcp-readmes/configs --as-of 2026-10-19
 agent-access-review scan case-studies/official-mcp-readmes/combined --as-of 2026-10-19
 ```
