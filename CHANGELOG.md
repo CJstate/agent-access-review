@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- VS Code `mcp.json` files with comments and trailing commas (JSONC) are now reviewed instead of skipped; malformed input is still rejected (#12, thanks @premsinghsodha7).
+
 ## 0.2.1 (2026-10-19)
 
 - **Case study:** scanned the configuration examples from 9 official MCP server READMEs ([case-studies/official-mcp-readmes](case-studies/official-mcp-readmes)).
