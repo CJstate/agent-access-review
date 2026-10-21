@@ -102,6 +102,58 @@ def test_malformed_structures_are_reported_not_crashed(tmp_path, write_json, cap
     assert [a.id for a in agents] == ['mcp-ok'] and 'skipped' in capsys.readouterr().err
 
 
+def test_discover_jsonc_mcp_config(tmp_path, capsys):
+    folder = tmp_path / '.vscode'
+    folder.mkdir()
+    (folder / 'mcp.json').write_text('''// VS Code MCP configuration
+{
+  "servers": {
+    /* Remote server */
+    "github": {"url": "https://api.githubcopilot.com/mcp/",},
+    "fetch": {
+      "command": "uvx",
+      "args": ["mcp-server-fetch", /* trailing comma */],
+    },
+  },
+} // end of config''', encoding='utf-8')
+    [agent] = discover([tmp_path])
+    grants = {g.tool: g for g in agent.grants}
+    assert grants['github'].endpoint == 'https://api.githubcopilot.com/mcp/'
+    assert grants['fetch'].package == 'mcp-server-fetch'
+    assert capsys.readouterr().err == ''
+
+
+def test_jsonc_preserves_string_contents(tmp_path):
+    path = tmp_path / 'mcp.json'
+    path.write_text(r'''{
+      "servers": {"remote": {
+        "url": "https://example.com/a//b/*literal*/?value=,}",
+        "note": "escaped quote: \" // still a string,]",
+        "path": "C:\\tools\\",
+        "headers": {"Authorization": "Bearer example-test-secret"},
+      }},
+    }''', encoding='utf-8')
+    [agent] = load(path)
+    spec = agent.raw['servers']['remote']
+    assert spec['url'] == 'https://example.com/a//b/*literal*/?value=,}'
+    assert spec['note'] == 'escaped quote: " // still a string,]'
+    assert spec['path'] == 'C:\\tools\\'
+    assert spec['headers']['Authorization'] == REDACTED
+
+
+@pytest.mark.parametrize('text', [
+    '{"servers": { /* unclosed comment }',
+    '{"servers": {"remote": {"url": "unterminated}}}',
+    '{"servers": {},,}',
+    '{"servers": {}, "number": 1/* comment */2}',
+])
+def test_jsonc_rejects_malformed_input(tmp_path, text):
+    path = tmp_path / 'mcp.json'
+    path.write_text(text, encoding='utf-8')
+    with pytest.raises(ValueError):
+        load(path)
+
+
 @pytest.mark.parametrize('args,expected', [
     (['run', '-i', '--rm', '--mount', 'type=bind,src=/Users/dev/Desktop,dst=/projects/Desktop',
       '--mount', 'type=bind,src=/data,dst=/projects/data,ro', 'mcp/filesystem', '/projects'],
